@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>English Hero v2.0</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7f0;margin:0;padding:20px}
+.card{max-width:700px;margin:auto;background:white;padding:20px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+h1{text-align:center;color:#58CC02}
+.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.stat{font-weight:bold}
+.progress{height:20px;background:#ddd;border-radius:10px;overflow:hidden}
+.bar{height:100%;background:#58CC02;width:0%}
+button{width:100%;padding:14px;margin:8px 0;border:none;border-radius:12px;background:#58CC02;color:white;font-size:18px}
+.dark{background:#111;color:#eee}
+.dark .card{background:#222}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>📚 English Hero v2.0</h1>
+
+<div class="row">
+<div class="stat">❤️ <span id="lives"></span></div>
+<div class="stat">⭐ <span id="xp"></span></div>
+<div class="stat">🏆 <span id="level"></span></div>
+<div class="stat">🔥 <span id="streak"></span></div>
+</div>
+
+<div class="progress"><div class="bar" id="bar"></div></div>
+<br>
+<button onclick="toggleDark()">🌙 Dark Mode</button>
+
+<h2 id="q"></h2>
+<div id="answers"></div>
+<p id="msg"></p>
+<p id="medal"></p>
+</div>
+
+<script>
+const words=[
+["Apple","Алма"],["Book","Кітап"],["Water","Су"],["House","Үй"],["Cat","Мысық"],
+["Dog","Ит"],["Tree","Ағаш"],["River","Өзен"],["Sky","Аспан"],["Friend","Дос"],
+["Family","Отбасы"],["Teacher","Мұғалім"],["Student","Оқушы"],["Mountain","Тау"],
+["Knowledge","Білім"],["Beautiful","Әдемі"],["Computer","Компьютер"],["Phone","Телефон"],
+["School","Мектеп"],["Success","Табыс"],["Bird","Құс"],["Milk","Сүт"],["Bread","Нан"],
+["Sun","Күн"],["Moon","Ай"],["Chair","Орындық"],["Table","Үстел"],["Road","Жол"],
+["Car","Көлік"],["Window","Терезе"]
+];
+
+let lives=+localStorage.lives||5;
+let xp=+localStorage.xp||0;
+let level=+localStorage.level||1;
+let streak=+localStorage.streak||1;
+let idx=0;
+
+function save(){
+localStorage.lives=lives;
+localStorage.xp=xp;
+localStorage.level=level;
+localStorage.streak=streak;
+}
+
+function sound(freq,dur){
+const ctx=new (window.AudioContext||window.webkitAudioContext)();
+const o=ctx.createOscillator();
+o.type="square";
+o.frequency.value=freq;
+o.connect(ctx.destination);
+o.start();
+setTimeout(()=>o.stop(),dur);
+}
+
+function update(){
+livesEl.textContent=lives;
+xpEl.textContent=xp;
+levelEl.textContent=level;
+streakEl.textContent=streak+" күн";
+bar.style.width=(xp%100)+"%";
+medal.textContent = xp>=1000?"👑 Аңыз":xp>=500?"🥇 Алтын":xp>=300?"🥈 Күміс":xp>=100?"🥉 Қола":"";
+save();
+}
+
+function ask(){
+if(lives<=0){ q.textContent="💀 Game Over"; answers.innerHTML=""; return; }
+if(idx>=words.length){ q.textContent="🎉 Жеңдің!"; answers.innerHTML=""; return; }
+
+const [en,kk]=words[idx];
+q.textContent=en+" деген не?";
+let opts=[kk];
+while(opts.length<4){
+ let r=words[Math.floor(Math.random()*words.length)][1];
+ if(!opts.includes(r)) opts.push(r);
+}
+opts.sort(()=>Math.random()-0.5);
+
+answers.innerHTML="";
+opts.forEach(o=>{
+ let b=document.createElement("button");
+ b.textContent=o;
+ b.onclick=()=>check(o,kk);
+ answers.appendChild(b);
+});
+}
+
+function check(ans,correct){
+if(ans===correct){
+xp+=10;
+msg.textContent="✅ Дұрыс!";
+sound(763,120);
+if(xp>=level*100){
+ level++;
+ sound(523,100);
+ setTimeout(()=>sound(659,100),120);
+ setTimeout(()=>sound(784,180),240);
+ msg.textContent="🎉 Level Up!";
+}
+}else{
+lives--;
+msg.textContent="❌ Қате!";
+sound(325,250);
+}
+idx++;
+update();
+setTimeout(ask,500);
+}
+
+function toggleDark(){
+document.body.classList.toggle("dark");
+}
+
+const livesEl=document.getElementById("lives");
+const xpEl=document.getElementById("xp");
+const levelEl=document.getElementById("level");
+const streakEl=document.getElementById("streak");
+const q=document.getElementById("q");
+const answers=document.getElementById("answers");
+const msg=document.getElementById("msg");
+const medal=document.getElementById("medal");
+const bar=document.getElementById("bar");
+
+update();
+ask();
+</script>
+</body>
+</html>
